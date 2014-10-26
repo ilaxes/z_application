@@ -1,0 +1,38 @@
+﻿1) Give us your suggestions on how we could make our data set better / more useful.
+- The data should be available at a higher frequency with details about the observations timestamp. It could allow analysis through time series or dynamic gamma/poisson models. These models integrate seasonnal/special event informations and can be updated online.
+- The model can be segmented based on customer segments. Usually only a small part of the website traffic can be link to CRM data but details on the geographic origin, available through IP adress localisation, can help to improve the results (city/countryside).
+- More Details of sales at the user level can be useful to identify segments of products and enrich the categories/subcategories information.
+- Additional informations regarding products can include product description and tag for text mining analysis.
+- More data on the marketing campaigns could help to isolate the inherent quality of a product.
+
+2) With the given dataset, can you come up with a scientific approach and model for our ranking?
+Problem definition :
+- The task is to rank the products according to “betterness”, then the first step is to find the right metric for this criteria. I identify 3 candidates :
+	- conversion rate, net sales / nb of impressions
+	- click through rate, net sales / nb of views (previous one seems more appropriate)
+	- % of canceled sales
+The net sales are directly influenced by the numbers of impressions and marketing campaigns, as we want to identify the inherent "betterness" of the product a relative mesure is more appropriate.
+It is possible to model several criterias and combine them to rank product according to a multi-objective function (ex. best conversion rate with less than 10% of canceled sales and stocks > X units).
+- The model is predictive, so we calculate our target variable on the last 7 days and use only non dated data (except stock) or data available before the last week (last_30days or total).
+- Each criteria can be modeled as a numeric variable using least square cost function but as we want to rank the product some alternative cost funtions can be more appropriate for model optimisation and evaluation (quantile, concordant pairs, NCDG...eventually at the category level).
+
+Data analysis :
+- summarizing and plotting variables help to identify specificities of data. In the dataset distributions of sales and impressions are very skewed inducing they may need to be log transformed, and some categorical features have a lot of categories which should be grouped.
+
+Data preparation :
+- I create some new features : activated_at => nb days since launch and month of launch, special_price => % discount and dummy special_price
+- I don't keep some variables : stock, last_7days.
+- I reduce the number of categories for some categorical variables.
+
+Data modeling
+- Tree ensemble models are often a good start for modeling as they limit the necessity of data transformation and preprocessing, and are able to model non linear relashionship.
+- Each model is optimised through a 10 fold cross validation and are then compared regarding of their out fold accuracy distributions. The best one is kept and rerun on the full dataset. An alternative is to blend the different models together.
+- Regarding of the results I can decide to split dataset and run a submodel on each subset to improve the global accuracy. 
+
+3) How would you test, train, and evaluate your model?
+There are two steps of evaluation :
+Offline : during the estimation process the hyper-parameters of the models are calculated through a 10 folds cross validation and the distributions of their accuracy are compared to choose the best one.
+Online : In production the model is evaluated through an A/B testing process. 2 randoms sets of visits are selected, one is provided by the model results and the other one by a baseline (ex. best sales during previous week). 
+
+See R program for an example of pipeline.
+
